@@ -3,23 +3,20 @@
 import sys
 
 def decode_cpuinfo(cpuinfofile):
-    cpulist = []
     with open(cpuinfofile, 'r') as cpuinfo:
-        cpudata = {}
-        for entry in cpuinfo:
-            #print("Original data: " + entry.strip())
-            if ':' in entry:
-                label, values = entry.split(':', 1)
-                label = label.strip()
-                if label == 'processor':
-                    cpudata = {}
-                cpudata[label] = values.strip()
-            else:
-                # End of CPU entry
-                cpudata[label] = values.strip() 
-                if len(cpudata) > 0:
-                    cpulist.append(cpudata)
-                    #print(cpudata)
+        return decode_cpuinfo_stream(cpuinfo)
+
+def decode_cpuinfo_stream(cpuinfo):
+    cpulist, cpudata = [], {}
+    for entry in cpuinfo:
+        try:
+            label, values = (_.strip() for _ in entry.split(':', 1))
+            if label == 'processor':
+                cpudata = {}
+            cpudata[label] = values.strip()
+        except ValueError:
+            if len(cpudata):
+                cpulist.append(cpudata)
     return cpulist
 
 if __name__ == '__main__':
