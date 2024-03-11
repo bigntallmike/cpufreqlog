@@ -61,7 +61,10 @@ def argparser():
 
 def datacollection(args):
     global RRDFILE
-    RRDFILE = os.path.join(args['datadir'], RRDFILENAME)
+    if "datadir" in args and args['datadir']:
+        RRDFILE = os.path.join(args['datadir'], RRDFILENAME)
+    else:
+        RRDFILE = os.path.join(os.getcwd(), RRDFILENAME)
     setup_rrd()
     try:
         cpuinfo_loop()
