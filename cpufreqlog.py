@@ -1,11 +1,13 @@
 #!/usr/bin/python3 -ttu
 
+import argparse
 from cpuinfo import decode_cpuinfo
 import os.path
 import rrdtool
+import sys
 from time import sleep
 
-RRDFILE = "/tmp/cpuinfo.rrd"
+RRDFILENAME = "cpuinfo.rrd"
 MAXCPUFREQ = 5000
 
 def cpuinfo_loop():
@@ -17,9 +19,11 @@ def cpuinfo_loop():
         for cpu_core_num, cpu_core_data in enumerate(cpu_info):
             labels.append(f"freq{cpu_core_num}")
             values.append(cpu_core_data['cpu MHz'])
-        rrdtool.update(RRDFILE, "-t", 
+        ret = rrdtool.updatev(RRDFILE, "-t", 
                     ":".join(labels), 
                     "N:%s" % (":".join(values)))
+        if ret['return_value'] != 0:
+            sys.exit(1)
         sleep(1)
 
 # Optionally updatev returns an update such as:
@@ -47,9 +51,22 @@ def setup_rrd():
         #print(rrd_ds)
         rrdtool.create(RRDFILE, "--start", "now", "--step", "1", *rrd_ds)
 
-if __name__ == "__main__":
+def argparser():
+    ap = argparse.ArgumentParser()
+    ap.add_argument(
+        '-d', '--datadir', required=False, help='path to store RRD files'
+    )
+    return vars(ap.parse_args())
+
+
+def datacollection(args):
+    global RRDFILE
+    RRDFILE = os.path.join(args['datadir'], RRDFILENAME)
     setup_rrd()
     try:
         cpuinfo_loop()
     except KeyboardInterrupt:
         print("Exiting")
+
+if __name__ == "__main__":
+    datacollection(argparser())
