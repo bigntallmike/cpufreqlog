@@ -7,7 +7,7 @@ import rrdtool
 import sys
 from time import sleep
 
-RRDFILENAME = "cpuinfo.rrd"
+RRDFILENAME = "cpufreq.rrd"
 MAXCPUFREQ = 5000
 
 def cpuinfo_loop():
@@ -18,7 +18,7 @@ def cpuinfo_loop():
         values = []
         for cpu_core_num, cpu_core_data in enumerate(cpu_info):
             labels.append(f"freq{cpu_core_num}")
-            values.append(cpu_core_data['cpu MHz'])
+            values.append(str(float(cpu_core_data['cpu MHz']) * 1_000_000.0))
         ret = rrdtool.updatev(RRDFILE, "-t", 
                     ":".join(labels), 
                     "N:%s" % (":".join(values)))
